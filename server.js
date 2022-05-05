@@ -7,6 +7,7 @@ const MONGOOSE = require('mongoose');
 const BODYPARSER = require('body-parser');
 const URL = require('url');
 const DNS = require('dns');
+const { nanoid } = require('nanoid');
 
 const APP = EXPRESS();
 
@@ -29,20 +30,30 @@ MONGOOSE.connect(
     useNewUrlParser: true, 
     useUnifiedTopology: true 
   }
-);
+)
+.then(() => console.log('Connected to MongoDB'))
+.catch(err => console.log(err));
+
+MONGOOSE.connection.on('error', err => console.log(err));
 
 // build url schema
-const Schema = MONGOOSE.Schema;
+const SCHEMA = MONGOOSE.Schema;
 
-const urlSchema = new Schema({
+let urlSchema = new SCHEMA({
   original_url: {type: String, required: true},
   short_url: {type: String, required: true}
 });
 
+// build ShortUrl model using url schema
+let ShortUrl = MONGOOSE.model('shortUrl', urlSchema); 
+
+// get request to root directory serves static index.html file.
 APP.get('/', (req, res) => {
   res.sendFile(process.cwd() + '/views/index.html');
 });
 
+// post request that validates url
+// and if valide creates a new ShortUrl
 APP.post('/api/shorturl/', (req, res) => {
   let url = URL.parse(req.body.url, false);
 
@@ -53,11 +64,25 @@ APP.post('/api/shorturl/', (req, res) => {
       });
     }
     
-    // TODO: Create new short url
-    // TODO: Save new short url to database
-    // TODO: Return new short url as json object
+    //Create new short url
 
-    res.json({message: 'here'});
+    let shortUrl = new ShortUrl({
+      original_url: req.body.url,
+      short_url: nanoid(4)
+    });
+
+    //Save new short url to database
+    shortUrl.save((err) => {
+      if(err) {
+        console.log(err)
+        return res.json({
+          error: 'Could not create shortened url.'
+        })
+      }
+    });
+
+    // Return new short url as json
+    res.json(shortUrl);
   });
 });
 

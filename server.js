@@ -65,10 +65,13 @@ APP.post('/api/shorturl/', (req, res) => {
     }
     
     //Create new short url
-
+    // use Nano ID library to create short_url
+    // id of length 12 characters will take ~1,000 years
+    // to reach a 1% probability of collision per
+    // calculator: https://zelark.github.io/nano-id-cc/
     let shortUrl = new ShortUrl({
       original_url: req.body.url,
-      short_url: nanoid(10)
+      short_url: nanoid(12)
     });
 
     //Save new short url to database

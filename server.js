@@ -68,7 +68,7 @@ APP.post('/api/shorturl/', (req, res) => {
 
     let shortUrl = new ShortUrl({
       original_url: req.body.url,
-      short_url: nanoid(4)
+      short_url: nanoid(10)
     });
 
     //Save new short url to database

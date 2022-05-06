@@ -55,6 +55,7 @@ APP.get('/', (req, res) => {
 // post request that validates url
 // and if valide creates a new ShortUrl
 APP.post('/api/shorturl/', (req, res) => {
+  
   let url = URL.parse(req.body.url, false);
 
   DNS.lookup(url.hostname, {all: true} , (err, addresses) => {

@@ -64,7 +64,7 @@ APP.post('/api/shorturl/', (req, res) => {
       });
     }
     
-    //Create new short url
+    // Create new short url
     // use Nano ID library to create short_url
     // id of length 12 characters will take ~1,000 years
     // to reach a 1% probability of collision per

@@ -20,7 +20,7 @@ APP.use(EXPRESS.static(`public`));
 // middleware parses requests where content-type
 // header is urlencoded and populates req.body
 // property with parsed body. The extended option
-// set to false parses using the querystring library.
+// set to false means parsing using the querystring library.
 APP.use(BODYPARSER.urlencoded({extended: false}));
 
 // connect to mongodb
@@ -58,10 +58,12 @@ APP.post('/api/shorturl/', (req, res) => {
   let url = URL.parse(req.body.url, false);
 
   DNS.lookup(url.hostname, {all: true} , (err, addresses) => {
+    
     if(err || addresses.length == 0) {
       return res.json({
         error: 'invalid url'
       });
+
     }
     
     // Create new short url
@@ -76,24 +78,50 @@ APP.post('/api/shorturl/', (req, res) => {
 
     //Save new short url to database
     shortUrl.save((err) => {
+      
       if(err) {
-        console.log(err)
+        console.log(err);
         return res.json({
           error: 'Could not create shortened url.'
-        })
-      }
-    });
+        });
 
-    // Return new short url as json
-    res.json(shortUrl);
+      }
+
+      // Return new short url as json
+      return res.json(shortUrl);
+    });
   });
 });
 
+// get request that will attempt to find the
+// corresponding ShortUrl in the database for
+// the value passed. If found will redirect user
+// to original_url.
 APP.get('/api/shorturl/:shortUrl', (req, res) => {
   
+  // get shortUrl value from path
   let shortUrl = req.params.shortUrl;
   
-  res.send(shortUrl);
+  // attempt to find the corresponding short url
+  // in database. if found redirect user to corresponding
+  // original_url. if not found return error message.
+  ShortUrl.findOne({short_url: shortUrl}, (err, document) => {
+    
+    if(err) {
+      console.log(err);
+      return res.json({
+        error: 'There was an issue getting the shortened url.'
+      })
+    }
+
+    if(document == null) {
+      return res.json({
+        error: 'Could not find shortened url.'
+      })
+    }
+
+    return res.redirect(document.original_url);
+  });
 });
 
 const listener = APP.listen(process.env.PORT || 3000, () => {
